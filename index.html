@@ -105,11 +105,9 @@
 		<div class="reportcontent">
 			The Aignosis developmental screening test is a cutting-edge tool
 			designed to identify early signs of autism and other developmental
-			delays in children aged 2 to 8 years. The test evaluates developmental
-			patterns through advanced A1 algorithms trained to detect subtle markers
-			of developmental differences.
+			delays in children aged 2 to 8 years. The test assesses developmental patterns through sophisticated algorithms trained to detect subtle markers of atypical development. It evaluates various behavioral and developmental milestones to provide insights into the child’s developmental progress.
 			<br /><br />
-			The system provides outputs as <span id="classificationmessage" style="font-size: 15px; color: #007bff;"></span>
+			The system generates developmental scores to indicate the child's alignment with typical or atypical developmental patterns: <span id="classificationmessage" style="font-size: 15px; color: #007bff;"></span>
 			<br /><br />
 		</div>
 		<span style="
@@ -142,8 +140,9 @@
 			</div>
 
 			<div id="chartContainer">
-				<!-- <h2>Percentage Chart</h2> -->
-				<canvas id="barChart"></canvas>
+				<!-- Display query parameters instead of the bar chart -->
+				<!-- <h2>Query Parameters</h2> -->
+				<div id="queryParameters"></div>
 			</div>
 		</div>
 		</center>
@@ -151,9 +150,9 @@
 	
 	<div class="scorecontent">
 		The Aignosis developmental test output was: <p id='message' style="font-size: xx-large; color: #007bff;"></p> 
-		0% developmental score - maximally neurotypical score. A score of 100% developmental challenge is achieved ifthe most neurotypical response is selected for each relevant question in
+		less developmental score - maximally neurotypical score. A score of less developmental challenge is achieved if the most neurotypical response is selected for each relevant question in
 		this domain. <br>
-		100%, developmental score = maximally atypical score. A score of 100%. developmental challenge is achieved if the most atypical response is selected for each relevant question in this
+		high, developmental score = maximally atypical score. A score of high. developmental challenge is achieved if the most atypical response is selected for each relevant question in this
 		domain. <br>
 	</div>	
 </div>
@@ -161,113 +160,54 @@
 	<button id="printBtn">Print PDF</button>
 </center>
 <script>
-		
+    // Function to format numbers to 1 decimal place
+    function formatToOneDecimal(value) {
+        return parseFloat(value).toFixed(1);
+    }
 
-	// Function to get URL parameters
-	function getURLParameter(name) {
-		const urlParams = new URLSearchParams(window.location.search);
-		return urlParams.get(name);
-	}
+    // Function to get and display URL parameters
+    function displayQueryParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryContainer = document.getElementById("queryParameters");
 
-	// Function to display the data
-	function displayData() {
-		const patientData = {
-			patientId: getURLParameter("patient_id"),
-			socialResponsiveness:
-				parseFloat(getURLParameter("social_response")) || 0,
-			emotionalResponsiveness:
-				parseFloat(getURLParameter("emotional_response")) || 0,
-			speechRecognition:
-				parseFloat(getURLParameter("speech_recognition")) || 0,
-			behaviouralPattern:
-				parseFloat(getURLParameter("behaviour_pattern")) || 0,
-			sensoryAspects: parseFloat(getURLParameter("sensory_aspect")) || 0,
-			cognitiveComponent: parseFloat(getURLParameter("cognitive")) || 0,
-			testscore:parseFloat(getURLParameter("testscore")) || 0,
-			classification:parseFloat(getURLParameter("classification")) || 0,
-		};
+        // Define the parameters to exclude
+        const excludeParams = ['sum', 'ca', 'patient_id'];
 
-		const patientDataContainer = document.getElementById("patientData");
-		for (const [key, value] of Object.entries(patientData)) {
-			const fieldDiv = document.createElement("div");
-			fieldDiv.classList.add("data-field");
-			fieldDiv.innerHTML = `<span class="label">${key
-				.replace(/([A-Z])/g, " $1")
-				.toUpperCase()}:</span> ${value || "N/A"}`;
-			patientDataContainer.appendChild(fieldDiv);
-		}
+        urlParams.forEach((value, key) => {
+            // Skip the parameters that should not be displayed
+            if (excludeParams.includes(key)) return;
 
-		// Generate bar chart
-		createBarChart(patientData);
-		document.getElementById('message').innerHTML = patientData.testscore;
-		document.getElementById('classificationmessage').innerHTML = patientData.classification;
-	}
-	
-	// Function to create a horizontal bar chart
-	function createBarChart(data) {
-		const labels = [
-			"Social Responsiveness",
-			"Emotional Responsiveness",
-			"Speech Recognition",
-			"Behavioural Pattern",
-			"Sensory Aspects",
-			"Cognitive Component",
-		];
+            // Check for special keys and replace them with full forms
+            let displayKey = key.toUpperCase();
+            if (key === "da") displayKey = "Developmental Age";
+            if (key === "dq") displayKey = "Developmental Quotient";
 
-		const values = [
-			data.socialResponsiveness,
-			data.emotionalResponsiveness,
-			data.speechRecognition,
-			data.behaviouralPattern,
-			data.sensoryAspects,
-			data.cognitiveComponent,
-		];
+            // Format numeric values to 1 decimal place
+            const formattedValue = isNaN(value) ? value : formatToOneDecimal(value);
 
-		const ctx = document.getElementById("barChart").getContext("2d");
-		new Chart(ctx, {
-			type: "bar",
-			data: {
-				labels: labels,
-				datasets: [
-					{
-						label: "Percentage",
-						data: values,
-						backgroundColor: [
-							"rgba(75, 192, 192, 0.2)",
-							"rgba(54, 162, 235, 0.2)",
-							"rgba(255, 206, 86, 0.2)",
-							"rgba(153, 102, 255, 0.2)",
-							"rgba(255, 159, 64, 0.2)",
-							"rgba(201, 203, 207, 0.2)",
-						],
-						borderColor: [
-							"rgba(75, 192, 192, 1)",
-							"rgba(54, 162, 235, 1)",
-							"rgba(255, 206, 86, 1)",
-							"rgba(153, 102, 255, 1)",
-							"rgba(255, 159, 64, 1)",
-							"rgba(201, 203, 207, 1)",
-						],
-						borderWidth: 1,
-					},
-				],
-			},
-			options: {
-				indexAxis: "y", // This reverses the axes
-				scales: {
-					x: {
-						beginAtZero: true,
-						max: 100,
-					},
-				},
-			},
-		});
-	}
+            // Add to the container
+            const paramDiv = document.createElement("div");
+            paramDiv.classList.add("data-field");
+            paramDiv.innerHTML = `<span class="label" style="color:#007bff">${displayKey}:</span> ${formattedValue}`;
+            queryContainer.appendChild(paramDiv);
+        });
+    }
 
-	// Call the function to display data once the page loads
-	window.onload = displayData;
+    // Update on page load
+    window.onload = () => {
+        displayQueryParameters();
 
-	// Add functionality to the Print PDF button
+        // Set test score and classification message with 1 decimal formatting
+        const urlParams = new URLSearchParams(window.location.search);
+        const testscore = formatToOneDecimal(urlParams.get("dq") || 0);
+        const classification = urlParams.get("dq") || "N/A";
+		const formattedClassification = isNaN(classification) ? classification : formatToOneDecimal(classification);
+
+        document.getElementById('message').innerHTML = testscore;
+        document.getElementById('classificationmessage').innerHTML = formattedClassification;
+    };
+
+
 	document
 		.getElementById("printBtn")
 		.addEventListener("click", function () {
